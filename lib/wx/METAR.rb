@@ -24,8 +24,23 @@ module WX
     end
   end
 
+  class RunwayVisualRange
+    attr_accessor :runway, :range
+    def initialize(rwy, range1, range2 = nil)
+      @runway = rwy
+      if range2
+        @range = [range1, range2]
+      else
+        @range = range1
+      end
+    end
+    def variable?
+      Array === @range
+    end
+  end
+
   class METAR
-    attr_accessor :station, :time, :wind, :visibility, :sky, :temp, :dewpoint, :altimiter
+    attr_accessor :station, :time, :wind, :visibility, :rvr, :sky, :temp, :dewpoint, :altimiter
     attr_writer :auto, :cor, :speci
 
     def auto?
@@ -109,6 +124,17 @@ module WX
         g = groups.shift
       elsif g =~ /^(\d+)SM$/
         m.visibility = "#{$1} miles".unit
+        g = groups.shift
+      end
+
+      # RVR
+      while g =~ /^R(\d+[LCR]?)\/(\d+)(V(\d+))?FT$/
+        m.rvr ||= []
+        rwy = $1
+        dist = ($2+' feet').unit
+        vdist = nil
+        vdist = "#{$4} feet".unit if $4
+        m.rvr.push RunwayVisualRange.new(rwy, dist, vdist)
         g = groups.shift
       end
 

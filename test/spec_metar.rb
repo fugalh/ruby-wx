@@ -76,11 +76,24 @@ context 'METAR' do
     m.visibility.should == '2.75 miles'.u
   end
 
-=begin
   specify 'runway visual range - RDRDR/VRVRVRVRFT or RDRDR/VNVNVNVNVVXVXVXVXFT' do
     @m.rvr.should_be_nil
+
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0900FT'
+    m.rvr.first.runway.should == '01L'
+    m.rvr.first.range.should == '900 feet'.u
+
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0600V1000FT'
+    m.rvr.first.should_be_variable
+    m.rvr.first.range.should == ['600 feet'.u, '1000 feet'.u]
+
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0900FT R30/0300FT'
+    m.rvr.size.should == 2
+    m.rvr.last.runway.should == '30'
+    m.rvr.last.range.should == '300 feet'.u
   end
 
+=begin
   specify "present weather - w'w'" do
     @m.weather.should_be_nil
   end
