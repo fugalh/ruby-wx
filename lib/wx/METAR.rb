@@ -2,7 +2,7 @@ require 'wx/exceptions'
 
 module WX
   class METAR
-    attr_accessor :station, :datetime, :wind, :visibility, :sky, :temp, :dewpoint, :altimiter
+    attr_accessor :station, :time, :wind, :visibility, :sky, :temp, :dewpoint, :altimiter
     attr_writer :auto, :cor, :speci
 
     def auto?
@@ -30,11 +30,14 @@ module WX
         raise ParseError, "Invalid Report Type '#{g}'"
       end
 
-      case g = groups.shift
-      when /^([a-zA-Z]{4})$/
+      if (g = groups.shift) =~ /^([a-zA-Z]{4})$/
         m.station = $1
       else
         raise ParseError, "Invalid Station Identifier '#{g}'"
+      end
+
+      if (g = groups.shift) =~ /^(\d\d)(\d\d)(\d\d)Z$/
+        m.time = "#{$1.to_i - 1} days".unit + "#{$2} hours" + "#{$3} minutes"
       end
 
       return m
@@ -43,7 +46,7 @@ module WX
     def initialize
       @speci = false
       @station = 'KLRU'
-      @datetime = '241517'
+      @time = '241517'
     end
   end
 end
