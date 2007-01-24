@@ -2,6 +2,28 @@ require 'wx/exceptions'
 require 'ruby-units'
 
 module WX
+  class Wind
+    # all with units
+    attr_accessor :speed, :direction, :gust, :variable
+    def initialize(speed, dir)
+      @speed = speed
+      @direction = dir
+      @gust = nil
+      @variable = nil
+    end
+    def calm?
+      @speed == '0 knots'.unit
+    end
+    # a,b should be angles e.g. '240 degrees'.unit
+    def variable=(d)
+      if not Array === d or d.size != 2
+        raise ArgumentError, "Expected array of two directions, got #{d.inspect}"
+      end
+      d.reverse! if d[1] < d[0]
+      @variable = d
+    end
+  end
+
   class METAR
     attr_accessor :station, :time, :wind, :visibility, :sky, :temp, :dewpoint, :altimiter
     attr_writer :auto, :cor, :speci
@@ -56,7 +78,26 @@ module WX
         g = groups.shift
       end
 
-      # 
+      # wind
+      if g =~ /^((\d\d\d)|VRB)(\d\d\d?)(G(\d\d\d?))?KT$/
+        speed = "#{$3} knots".unit
+        if $1 == 'VRB'
+          if speed > '6 knots'.unit
+            raise ParseError, "Invalid Wind '#{g}' (VRB but speed > 6 knots)"
+          end
+          direction = :variable
+        else
+          direction = "#{$1} degrees".unit
+        end
+        m.wind = Wind.new(speed, direction)
+
+        m.wind.gust = "#{$5} knots".unit if $4
+
+        if (g = groups.shift) =~ /^(\d\d\d)V(\d\d\d)$/
+          m.wind.variable = ["#{$1} degrees".unit, "#{$2} degrees".unit]
+          g = groups.shift
+        end
+      end
 
       return m
     end

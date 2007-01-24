@@ -39,21 +39,38 @@ context 'METAR' do
     m.should_not_be_cor
   end
 
-=begin
   specify 'wind - ddff(f)Gfmfm(fm)KT_dndndnVdxdxdx' do
     @m.wind.speed.should == '0 knots'.u
     @m.wind.direction.should == '0 degrees'.u
-    # TODO gusty, over 100 kts, variable, light and variable, etc.
+    @m.wind.should_be_calm
+
+    m = METAR.parse 'METAR KLRU 241517Z 27020G35KT'
+    m.wind.direction.should == '270 degrees'.u
+    m.wind.speed.should == '20 knots'.u
+    m.wind.gust.should == '35 knots'.u
+
+    m = METAR.parse 'METAR KLRU 241517Z 270120G135KT'
+    m.wind.direction.should == '270 degrees'.u
+    m.wind.speed.should == '120 knots'.u
+    m.wind.gust.should == '135 knots'.u
+
+    m = METAR.parse 'METAR KLRU 241517Z VRB03KT'
+    m.wind.direction.should == :variable
+    m.wind.speed.should == '3 knots'.u
+
+    lambda {m = METAR.parse 'METAR KLRU 241517Z VRB07KT'}.should_raise ParseError, /wind/i
+
+    m = METAR.parse 'METAR KLRU 241517Z 21010KT 180V240'
+    m.wind.variable.should == ['180 degrees'.u, '240 degrees'.u]
   end
 
+=begin
   specify 'visibility - VVVVVSM' do
     @m.visibility.should == '10 miles'.u
-    # TODO other units
   end
 
   specify 'runway visual range - RDRDR/VRVRVRVRFT or RDRDR/VNVNVNVNVVXVXVXVXFT' do
     @m.rvr.should_be_nil
-    # TODO
   end
 
   specify "present weather - w'w'" do
@@ -82,5 +99,7 @@ context 'METAR' do
     @m.station.should_not_be_nil
     @m.datetime.should_not_be_nil
   end
+
+  # TODO non-US units
 =end
 end
