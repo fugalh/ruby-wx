@@ -11,11 +11,13 @@ context 'METAR' do
   specify 'type - METAR/SPECI' do
     @m.should_not_be_speci
     METAR.parse('SPECI KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2').should_be_speci
-    lambda { METAR.parse('foo') }.should_raise WX::ParseError
+    lambda { METAR.parse('foo') }.should_raise WX::ParseError, /type/i
   end
 
   specify 'station identifier - CCCC' do
     @m.station.should == 'KLRU'
+    lambda { METAR.parse('METAR LRU') }.should_raise WX::ParseError, /station/i
+    lambda { METAR.parse('METAR foo1') }.should_raise WX::ParseError, /station/i
   end
 
   specify 'date and time - YYGGggZ' do

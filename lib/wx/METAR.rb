@@ -20,13 +20,21 @@ module WX
     def self.parse(raw)
       m = METAR.new
       groups = raw.split
-      case groups.shift
+
+      case g = groups.shift
       when 'METAR'
         m.speci = false
       when 'SPECI'
         m.speci = true
       else
-        raise ParseError, 'Invalid Report Type'
+        raise ParseError, "Invalid Report Type '#{g}'"
+      end
+
+      case g = groups.shift
+      when /^([a-zA-Z]{4})$/
+        m.station = $1
+      else
+        raise ParseError, "Invalid Station Identifier '#{g}'"
       end
 
       return m
