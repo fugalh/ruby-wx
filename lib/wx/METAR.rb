@@ -99,6 +99,19 @@ module WX
         end
       end
 
+      # visibility
+      if g =~ /^\d$/ and groups.first =~ /^(\d)\/(\d)SM$/
+        m.visibility = "#{g.to_f + $1.to_f/$2.to_f} miles".unit
+        groups.shift
+        g = groups.shift
+      elsif g =~ /^(\d)\/(\d)SM$/
+        m.visibility = "#{$1.to_f/$2.to_f} miles".unit
+        g = groups.shift
+      elsif g =~ /^(\d+)SM$/
+        m.visibility = "#{$1} miles".unit
+        g = groups.shift
+      end
+
       return m
     end
 

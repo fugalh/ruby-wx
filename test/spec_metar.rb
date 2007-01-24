@@ -64,11 +64,19 @@ context 'METAR' do
     m.wind.variable.should == ['180 degrees'.u, '240 degrees'.u]
   end
 
-=begin
   specify 'visibility - VVVVVSM' do
     @m.visibility.should == '10 miles'.u
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 5SM'
+    m.visibility.should == '5 miles'.u
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1/2SM'
+    m.visibility.should == '.5 miles'.u
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM'
+    m.visibility.should == '1.875 miles'.u
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 2 3/4SM'
+    m.visibility.should == '2.75 miles'.u
   end
 
+=begin
   specify 'runway visual range - RDRDR/VRVRVRVRFT or RDRDR/VNVNVNVNVVXVXVXVXFT' do
     @m.rvr.should_be_nil
   end
