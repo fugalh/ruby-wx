@@ -1,4 +1,5 @@
 require 'wx/exceptions'
+require 'ruby-units'
 
 module WX
   class METAR
@@ -37,7 +38,9 @@ module WX
       end
 
       if (g = groups.shift) =~ /^(\d\d)(\d\d)(\d\d)Z$/
-        m.time = "#{$1.to_i - 1} days".unit + "#{$2} hours" + "#{$3} minutes"
+        m.time = relative_time($1, $2, $3)
+      else
+        raise ParseError, "Invalid Date and Time of Report '#{g}'"
       end
 
       return m
@@ -46,7 +49,25 @@ module WX
     def initialize
       @speci = false
       @station = 'KLRU'
-      @time = '241517'
+      @time = Time.now
     end
+
+    def self.relative_time(mday, hour, min)
+      t = Time.now
+      y = t.year
+      m = t.month
+      mday = mday.to_i
+      hour = hour.to_i
+      min = min.to_i
+      if t.mday > mday
+        m -= 1
+      end
+      if m < 1
+        m = 1
+        y -= 1
+      end
+      return Time.utc(y, m, mday, hour, min)
+    end
+
   end
 end

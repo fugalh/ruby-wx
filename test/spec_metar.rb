@@ -1,5 +1,4 @@
 require 'wx/METAR'
-require 'rubygems'
 require 'ruby-units'
 
 include WX
@@ -21,7 +20,12 @@ context 'METAR' do
   end
 
   specify 'date and time - YYGGggZ' do
-    @m.time.should == '24 days'.u - '1 day' + '15 hours' + '17 minutes'
+    @m.time.mday.should == 24
+    @m.time.hour.should == 15
+    @m.time.min.should == 17
+    (Time.now - @m.time).should < 31*24*60*60   # within the past month
+    (Time.now - @m.time).should >= 0            # observation must be in the past
+    lambda { METAR.parse('METAR KLRU foo') }.should_raise WX::ParseError, /time/i
   end
 
 =begin
