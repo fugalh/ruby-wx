@@ -20,6 +20,7 @@ context 'METAR' do
     lambda { METAR.parse('METAR foo1') }.should_raise WX::ParseError, /station/i
   end
 
+=begin
   specify 'date and time - YYGGggZ' do
     @m.date.should == 24
     @m.time.should == 1517 # FIXME
@@ -78,4 +79,5 @@ context 'METAR' do
     @m.station.should_not_be_nil
     @m.datetime.should_not_be_nil
   end
+=end
 end
