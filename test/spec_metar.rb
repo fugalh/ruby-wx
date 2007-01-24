@@ -28,10 +28,9 @@ context 'METAR' do
     lambda { METAR.parse('METAR KLRU foo') }.should_raise WX::ParseError, /time/i
   end
 
-=begin
   specify 'report modifier - AUTO/COR' do
     @m.should_be_auto
-    m.should_not_be_cor
+    @m.should_not_be_cor
     m = METAR.parse 'METAR KLRU 241517Z COR 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
     m.should_be_cor
     m.should_not_be_auto
@@ -40,6 +39,7 @@ context 'METAR' do
     m.should_not_be_cor
   end
 
+=begin
   specify 'wind - ddff(f)Gfmfm(fm)KT_dndndnVdxdxdx' do
     @m.wind.speed.should == '0 knots'.u
     @m.wind.direction.should == '0 degrees'.u

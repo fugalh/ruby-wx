@@ -22,6 +22,7 @@ module WX
       m = METAR.new
       groups = raw.split
 
+      # type
       case g = groups.shift
       when 'METAR'
         m.speci = false
@@ -31,17 +32,31 @@ module WX
         raise ParseError, "Invalid Report Type '#{g}'"
       end
 
+      # station
       if (g = groups.shift) =~ /^([a-zA-Z]{4})$/
         m.station = $1
       else
         raise ParseError, "Invalid Station Identifier '#{g}'"
       end
 
+      # date and time
       if (g = groups.shift) =~ /^(\d\d)(\d\d)(\d\d)Z$/
         m.time = relative_time($1, $2, $3)
       else
         raise ParseError, "Invalid Date and Time of Report '#{g}'"
       end
+
+      # modifier
+      g = groups.shift
+      if g == 'AUTO'
+        m.auto = true
+        g = groups.shift
+      elsif g == 'COR'
+        m.cor = true
+        g = groups.shift
+      end
+
+      # 
 
       return m
     end
