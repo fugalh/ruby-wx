@@ -38,6 +38,25 @@ module WX
       Array === @range
     end
   end
+  class VisualRange
+    attr_accessor :distance
+    def initialize(dist, plusminus=nil)
+      case plusminus 
+      when 'P'
+        @plus = true
+      when 'M'
+        @minus = true
+      end
+      @distance = dist
+    end
+
+    def plus?
+      @plus ? true : false
+    end
+    def minus?
+      @minus ? true : false
+    end
+  end
 
   class METAR
     attr_accessor :station, :time, :wind, :visibility, :rvr, :sky, :temp, :dewpoint, :altimiter
@@ -128,13 +147,16 @@ module WX
       end
 
       # RVR
-      while g =~ /^R(\d+[LCR]?)\/(\d+)(V(\d+))?FT$/
+      while g =~ /^R(\d+[LCR]?)\/([PM]?)(\d+)(V([PM]?)(\d+))?FT$/
         m.rvr ||= []
         rwy = $1
-        dist = ($2+' feet').unit
-        vdist = nil
-        vdist = "#{$4} feet".unit if $4
-        m.rvr.push RunwayVisualRange.new(rwy, dist, vdist)
+        dist = ($3+' feet').unit
+        vr = nil
+        if $6
+          vdist = "#{$6} feet".unit
+          vr = VisualRange.new(vdist,$5)
+        end
+        m.rvr.push RunwayVisualRange.new(rwy, VisualRange.new(dist,$2), vr)
         g = groups.shift
       end
 
