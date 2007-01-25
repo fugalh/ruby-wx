@@ -100,17 +100,17 @@ module WX
       groups = raw.split
 
       # type
+      m.speci = false
       case g = groups.shift
       when 'METAR'
-        m.speci = false
+        g = groups.shift
       when 'SPECI'
         m.speci = true
-      else
-        raise ParseError, "Invalid Report Type '#{g}'"
+        g = groups.shift
       end
 
       # station
-      if (g = groups.shift) =~ /^([a-zA-Z]{4})$/
+      if g =~ /^([a-zA-Z0-9]{4})$/
         m.station = $1
       else
         raise ParseError, "Invalid Station Identifier '#{g}'"
@@ -134,13 +134,18 @@ module WX
       end
 
       # wind
-      if g =~ /^((\d\d\d)|VRB)(\d\d\d?)(G(\d\d\d?))?KT$/
-        speed = "#{$3} knots".unit
+      if g =~ /^((\d\d\d)|VRB)(\d\d\d?)(G(\d\d\d?))?(KT|KMH|MPS)$/
+        case $6 
+        when 'KT'
+          unit = 'knots'
+        when 'KMH'
+          unit = 'kph'
+        when 'MPS'
+          unit = 'm/s'
+        end
+        speed = "#{$3} #{unit}".unit
         if $1 == 'VRB'
-          if speed > '6 knots'.unit
-            raise ParseError, "Invalid Wind '#{g}' (VRB but speed > 6 knots)"
-          end
-          direction = :variable
+          direction = 'VRB'
         else
           direction = "#{$1} degrees".unit
         end

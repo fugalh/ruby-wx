@@ -7,63 +7,6 @@ context 'METAR' do
     @m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
   end
 
-  specify 'type - METAR/SPECI' do
-    @m.should_not_be_speci
-    METAR.parse('SPECI KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2').should_be_speci
-    lambda { METAR.parse('foo') }.should_raise WX::ParseError, /type/i
-  end
-
-  specify 'station identifier - CCCC' do
-    @m.station.should == 'KLRU'
-    lambda { METAR.parse('METAR LRU') }.should_raise WX::ParseError, /station/i
-    lambda { METAR.parse('METAR foo1') }.should_raise WX::ParseError, /station/i
-  end
-
-  specify 'date and time - YYGGggZ' do
-    @m.time.mday.should == 24
-    @m.time.hour.should == 15
-    @m.time.min.should == 17
-    (Time.now - @m.time).should < 31*24*60*60   # within the past month
-    (Time.now - @m.time).should >= 0            # observation must be in the past
-    lambda { METAR.parse('METAR KLRU foo') }.should_raise WX::ParseError, /time/i
-  end
-
-  specify 'report modifier - AUTO/COR' do
-    @m.should_be_auto
-    @m.should_not_be_cor
-    m = METAR.parse 'METAR KLRU 241517Z COR 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
-    m.should_be_cor
-    m.should_not_be_auto
-    m = METAR.parse 'METAR KLRU 241517Z 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
-    m.should_not_be_auto
-    m.should_not_be_cor
-  end
-
-  specify 'wind - ddff(f)Gfmfm(fm)KT_dndndnVdxdxdx' do
-    @m.wind.speed.should == '0 knots'.u
-    @m.wind.direction.should == '0 degrees'.u
-    @m.wind.should_be_calm
-
-    m = METAR.parse 'METAR KLRU 241517Z 27020G35KT'
-    m.wind.direction.should == '270 degrees'.u
-    m.wind.speed.should == '20 knots'.u
-    m.wind.gust.should == '35 knots'.u
-
-    m = METAR.parse 'METAR KLRU 241517Z 270120G135KT'
-    m.wind.direction.should == '270 degrees'.u
-    m.wind.speed.should == '120 knots'.u
-    m.wind.gust.should == '135 knots'.u
-
-    m = METAR.parse 'METAR KLRU 241517Z VRB03KT'
-    m.wind.direction.should == :variable
-    m.wind.speed.should == '3 knots'.u
-
-    lambda {m = METAR.parse 'METAR KLRU 241517Z VRB07KT'}.should_raise ParseError, /wind/i
-
-    m = METAR.parse 'METAR KLRU 241517Z 21010KT 180V240'
-    m.wind.variable.should == ['180 degrees'.u, '240 degrees'.u]
-  end
-
   specify 'visibility - VVVVVSM' do
     @m.visibility.should == '10 miles'.u
     m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 5SM'
@@ -158,3 +101,106 @@ end
 # TODO refactor spec
 # TODO non-US units
 # TODO parse rmk
+
+
+# refactoring
+context 'Type' do
+  specify 'METAR' do
+    m = METAR.parse 'METAR KLRU 250455Z'
+    m.should_not_be_speci
+  end
+  specify 'SPECI' do
+    m = METAR.parse 'SPECI KLRU 250455Z'
+    m.should_be_speci
+  end
+  specify 'omitted' do
+    m = METAR.parse 'KLRU 250455Z'
+    m.should_not_be_speci
+  end
+end
+context 'Station' do
+  specify 'KLRU' do
+    m = METAR.parse 'METAR KLRU 250455Z'
+    m.station.should == 'KLRU'
+  end
+end
+context '250455Z' do
+  setup do
+    @m = METAR.parse 'METAR KLRU 250455Z'
+  end
+  specify 'day 25' do
+    @m.time.mday.should == 25
+  end
+  specify 'hour 4' do
+    @m.time.hour.should == 4
+  end
+  specify 'minute 55' do
+    @m.time.min.should == 55
+  end
+  specify 'utc' do
+    @m.time.should_be_utc
+  end
+  specify 'in the past' do
+    (Time.now - @m.time).should >= 0            # observation must be in the past
+  end
+  specify 'within the past month' do
+    (Time.now - @m.time).should < 31*24*60*60   # within the past month
+  end
+end
+context 'AUTO/COR' do
+  specify 'AUTO' do
+    m = METAR.parse('KLRU 250513Z AUTO 24005KT 10SM CLR 02/M01 A3038 RMK AO2')
+    m.should_be_auto
+    m.should_not_be_cor
+  end
+  specify 'COR' do
+    m = METAR.parse('KLRU 250513Z COR 24005KT 10SM CLR 02/M01 A3038 RMK AO2')
+    m.should_not_be_auto
+    m.should_be_cor
+  end
+  specify 'omitted' do
+    m = METAR.parse('KLRU 250513Z')
+    m.should_not_be_auto
+    m.should_not_be_cor
+  end
+end
+context 'Wind' do
+  specify 'calm' do
+    m = METAR.parse('KLRU 250513Z 00000KT')
+    m.wind.should_be_calm
+  end
+  specify 'ordinary' do
+    m = METAR.parse('KLRU 250513Z 24005KT')
+    m.wind.speed.should == '5 kts'.u
+    m.wind.direction.should == '240 deg'.u
+  end
+  specify 'gust' do
+    m = METAR.parse('KLRU 250513Z 27020G35KT')
+    m.wind.speed.should == '20 kts'.u
+    m.wind.direction.should == '270 deg'.u
+    m.wind.gust.should == '35 kts'.u
+  end
+  specify 'three-digit wind' do
+    m = METAR.parse('KLRU 250513Z 270120G135KT')
+    m.wind.speed.should == '120 kts'.u
+    m.wind.direction.should == '270 deg'.u
+    m.wind.gust.should == '135 kts'.u
+  end
+  specify 'light and variable' do
+    m = METAR.parse 'METAR KLRU 241517Z VRB02KT'
+    m.wind.direction.should == 'VRB'
+    m.wind.speed.should == '2 knots'.u
+  end
+  specify 'strong and variable' do
+    m = METAR.parse 'KLRU 241517Z 21010KT 100V240'
+    m.wind.variable.should == ['100 deg'.u, '240 deg'.u]
+  end
+  specify 'other units' do
+    m = METAR.parse 'KLRU 250533Z 27007KMH'
+    m.wind.speed.should == '7 kph'.u
+    m = METAR.parse 'KLRU 250533Z 27002MPS'
+    m.wind.speed.should == '2 m/s'.u
+  end
+end
+
+# etc.
