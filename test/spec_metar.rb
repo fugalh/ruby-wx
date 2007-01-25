@@ -98,18 +98,50 @@ context 'METAR' do
     m.rvr.first.range.should_be_minus
   end
 
-=begin
   specify "present weather - w'w'" do
     @m.weather.should_be_nil
+    m = METAR.parse 'METAR KLRU 241517Z -SHRA'
+    m.weather.intensity.should == '-'
+    m.weather.descriptor.should == 'SH'
+    m.weather.phenomena.should == ['RA']
+    m = METAR.parse 'METAR KLRU 241517Z BCFG'
+    m.weather.intensity.should_be_nil
+    m.weather.descriptor.should == 'BC'
+    m.weather.phenomena.should == ['FG']
+    m = METAR.parse 'METAR KLRU 241517Z +FC'
+    m.weather.intensity.should == '+'
+    m.weather.phenomena.should == ['FC']
+    m = METAR.parse 'METAR KLRU 241517Z TSSNGS'
+    m.weather.intensity.should_be_nil
+    m.weather.descriptor.should == 'TS'
+    m.weather.phenomena.should == ['SN','GS']
+    m = METAR.parse 'METAR KLRU 241517Z VCTS'
+    m.weather.proximity.should == 'VC'
+    m.weather.descriptor.should == 'TS'
+    m.weather.phenomena.should == []
   end
 
   specify 'sky condition - NsNsNshshshs or VVhshshs or SKC/CLR' do
-    @m.sky.should_be_clr
+    @m.sky.should == 'CLR'
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM SKC 01/M02 A3031 RMK AO2'
+    m.sky.should == 'SKC'
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM FEW048 01/M02 A3031 RMK AO2'
+    m.sky.should == ['FEW','48 deg'.u]
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM SCT030 01/M02 A3031 RMK AO2'
+    m.sky.should == ['SCT','30 deg'.u]
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM BKN030 01/M02 A3031 RMK AO2'
+    m.sky.should == ['BKN','30 deg'.u]
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM OVC030 01/M02 A3031 RMK AO2'
+    m.sky.should == ['OVC','30 deg'.u]
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM VV005 01/M02 A3031 RMK AO2'
+    m.sky.should == ['VV','500 feet'.u]
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM BKN030CB'
+    m.sky.should == ['BKN','30 deg'.u, 'CB']
   end
 
   specify "temperature and dew point - T'T'/T'dT'd" do
-    @m.temp.should == '1 temp-C'.u
-    @m.dewpoint.should == '-2 temp-C'.u
+    @m.temp.should == '1 degC'.u
+    @m.dewpoint.should == '-2 degC'.u
   end
 
   specify 'altimiter - APHPHPHPH' do
@@ -117,15 +149,12 @@ context 'METAR' do
   end
 
   specify 'remarks' do
-    @m.remarks.should == @m.rmk
-    @m.rmk.should == 'A02'
+    @m.rmk.should == @m.rmk
+    @m.rmk.should == 'AO2'
   end
-
-  specify 'mandatory groups: station, and datetime' do
-    @m.station.should_not_be_nil
-    @m.datetime.should_not_be_nil
-  end
-
-  # TODO non-US units
-=end
 end
+
+# TODO rethink wind, rvr, present weather, sky condition
+# TODO refactor spec
+# TODO non-US units
+# TODO parse rmk

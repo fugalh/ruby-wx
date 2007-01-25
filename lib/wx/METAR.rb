@@ -38,6 +38,7 @@ module WX
       Array === @range
     end
   end
+
   class VisualRange
     attr_accessor :distance
     def initialize(dist, plusminus=nil)
@@ -58,8 +59,20 @@ module WX
     end
   end
 
+  class PresentWeather
+    attr_accessor :intensity, :descriptor, :phenomena
+    def initialize(intensity_or_proximity, descriptor, phenomena)
+      @intensity = intensity_or_proximity
+      @descriptor = descriptor
+      @phenomena = phenomena
+    end
+    def proximity
+      @intensity
+    end
+  end
+
   class METAR
-    attr_accessor :station, :time, :wind, :visibility, :rvr, :sky, :temp, :dewpoint, :altimiter
+    attr_accessor :station, :time, :wind, :visibility, :rvr, :weather, :sky, :temp, :dewpoint, :altimiter, :rmk
     attr_writer :auto, :cor, :speci
 
     def auto?
@@ -72,6 +85,14 @@ module WX
 
     def speci?
       @speci ? true : false
+    end
+
+    def clr?
+      @sky == 'CLR'
+    end
+
+    def skc?
+      @sky == 'SKC'
     end
 
     def self.parse(raw)
@@ -158,6 +179,55 @@ module WX
         end
         m.rvr.push RunwayVisualRange.new(rwy, VisualRange.new(dist,$2), vr)
         g = groups.shift
+      end
+
+      # present weather
+      while g =~ /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PE|GR|GS|UP)*|(BR|FG|FU|VA|DU|SA|HZ|PY)*|(PO|SQ|FC|SS|DS)*)$/
+        s = ($3 || '')
+        ph = []
+        until s.empty?
+          ph.push(s.slice!(0..1))
+        end
+        m.weather = PresentWeather.new($1,$2,ph)
+        g = groups.shift
+      end
+      
+      # sky condition
+      if g =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)(\d\d\d|\/\/\/)(TCU|CB)?$/
+        if $1
+          m.sky = $1
+        else
+          if $2 == 'VV'
+            m.sky = [$2,"#{$3}00 feet".unit]
+          else
+            m.sky = [$2,"#{$3} deg".unit]
+          end
+          m.sky.push $4 if $4
+        end
+
+        g = groups.shift
+      end
+
+      # temperature and dew point
+      if g =~ /^(M?)(\d\d)\/(M?)(\d\d)$/
+        t = $2.to_i
+        t = -t if $1 == 'M'
+        m.temp = "#{t} degC".unit
+
+        d = $4.to_i
+        d = -d if $3 == 'M'
+        m.dewpoint = "#{d} degC".unit
+        
+        g = groups.shift
+      end
+
+      if g =~ /^A(\d\d\d\d)$/
+        m.altimiter = "#{$1.to_f / 100} inHg".unit
+        g = groups.shift
+      end
+
+      if g == 'RMK'
+        m.rmk = groups.join(' ')
       end
 
       return m
