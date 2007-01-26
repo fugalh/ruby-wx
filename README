@@ -1,0 +1,66 @@
+= Ruby WX
+WX is shorthand for weather in aviation circles. Ruby WX is a library for
+dealing with aviation weather codes, namely METAR and (soon) TAF. Although
+intended for aviation, they are a useful way of getting a recent weather
+synopsis or forecast even for nonaviators.
+
+This release has been coded to the specification in 
+[Federal Meteorological Handbook No. 1 Chapter 12](http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link).
+
+== Synopsis
+require 'wx/metar'
+m = METAR.parse('KLRU 260533Z AUTO 12013G19KT 10SM SCT026 SCT032 OVC039 07/02 A3020 RMK AO2')
+m.station               #=> KLRU
+m.auto?                 #=> true
+m.wind.direction        #=> '120 deg'.unit
+m.wind.speed            #=> '13 knots'.unit
+m.wind.gust             #=> '19 knots'.unit
+m.visibility            #=> '10 miles'.unit
+m.sky.first.cover       #=> 'SCT' [1]
+m.sky.first.height      #=> '2600 feet'.unit
+m.sky[1].cover          #=> 'SCT'
+m.sky[1].height         #=> '3200 feet'.unit
+m.sky[2].cover          #=> 'OVC'
+m.sky[2].height         #=> '3900 feet'.unit
+m.temp                  #=> '7 degC'.unit
+m.dewpoint              #=> '2 degC'.unit
+m.altimiter             #=> '30.20 inHg'.unit (barometric pressure)
+m.rmk                   #=> 'AO2'
+
+1. See http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link for
+   the meaning of sky cover codes and present weather codes.
+
+== Requirements
+- ruby
+- ruby-units
+- rspec if you want to run the tests
+
+== Installation
+sudo ruby setup.rb
+
+== Documentation
+Read the code or generate the rdocs (and then read the code to clear up
+confusion). See also TODO.
+
+== Future Directions
+See TODO
+
+== Bugs
+Email me at hans+ruby-wx@fugal.net
+
+== License
+Copyright (C) 2007  Hans Fugal
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
