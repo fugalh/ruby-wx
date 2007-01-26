@@ -3,32 +3,69 @@ require 'wx/groups'
 require 'ruby-units'
 
 module WX
+  # METAR is short for a bunch of French words meaning "aviation routine
+  # weather report". An example METAR code looks like:
+  #     KLRU 261453Z AUTO 00000KT 3SM -RA OVC004 02/02 A3008 RMK AO2
+  # This is intimidating, to say the least, to nonaviators. This class will
+  # parse a METAR code and provide the information in its attribute readers.
   class METAR
     include Groups
-    attr_accessor :station, :time, :wind, :visibility, :rvr, :weather, :sky
-    attr_accessor :temp, :dewpoint, :altimiter, :rmk
-    attr_writer :auto, :cor, :speci
+    # The METAR station, as found in
+    # stations.txt[http://weather.aero/metars/stations.txt]
+    attr_accessor :station
+    # A ::Time object. Note that METAR doesn't include year or month
+    # information, so it is assumed that this time is intended to be within the
+    # past month of ::Time.now 
+    attr_accessor :time
+    # A Groups::Wind object.
+    attr_accessor :wind
+    # A Groups::Visibility object.
+    attr_accessor :visibility
+    # An array of  Groups::RunwayVisualRange objects.
+    attr_accessor :rvr
+    # An array of Groups::PresentWeather objects.
+    attr_accessor :weather
+    # An array of Groups::Sky objects.
+    attr_accessor :sky
+    # A temperature Unit
+    attr_accessor :temp
+    # A temperature Unit
+    attr_accessor :dewpoint
+    # A pressure Unit, giving atmospheric pressure (by which one calibrates an
+    # altimiter)
+    attr_accessor :altimiter
+    # Remarks.
+    attr_accessor :rmk
 
+    # Was this report entirely automated? (i.e. not checked by a human)
     def auto?
       @auto ? true : false
     end
 
+    # Was this report corrected by a human?
     def cor?
       @cor ? true : false
     end
 
+    # Was this a SPECI report? SPECI (special) reports are issued when weather
+    # changes significantly between regular reports, which are generally every
+    # hour.
     def speci?
       @speci ? true : false
     end
 
+    # CLR means clear below 12,000 feet (because automated equipment can't tell
+    # above 12,000 feet)
     def clr?
       @sky == ['CLR']
     end
 
+    # SKC means sky clear. Only humans can report SKC
     def skc?
       @sky == ['SKC']
     end
 
+    # Parse a raw METAR code and return a METAR object
     def self.parse(raw)
       m = METAR.new
       groups = raw.split
@@ -139,7 +176,8 @@ module WX
       return m
     end
 
-    def initialize
+    attr_accessor :speci, :auto, :cor
+    def initialize #:nodoc:
       @speci = false
       @station = 'KLRU'
       @time = Time.now
