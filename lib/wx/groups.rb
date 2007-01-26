@@ -12,6 +12,10 @@ class Unit
   def plus?
     @plus
   end
+  alias :greater_than :plus
+  alias :less_than :minus
+  alias :greater_than? :plus?
+  alias :less_than? :minus?
 end
 
 module WX
@@ -45,14 +49,32 @@ module WX
     class Wind
       # Angle Unit
       attr_reader :direction
+      alias :dir :direction
+      alias :deg :direction
+      alias :degrees :direction
+      def radians
+        @direction.to 'rad'
+      end
+      alias :rads :radians
+      alias :rad :radians
       # Speed Unit
       attr_reader :speed
+      def mph
+        @speed.to 'mph'
+      end
+      def knots
+        @speed.to 'knots'
+      end
+      alias :kts :knots
       # Speed Unit
       attr_reader :gust
+      alias :gusts :gust
+      alias :gusting_to :gust
       # If wind is strong and variable, this will be a two-element Array
       # containing the angle Unit limits of the range, e.g. 
       #     ['10 deg'.unit, '200 deg'.unit]
       attr_reader :variable 
+      alias :variable_range :variable
       def initialize(raw)
         raise ArgumentError unless raw =~/(\d\d\d|VRB)(\d\d\d?)(G(\d\d\d?))?(KT|KMH|MPS)( (\d\d\d)V(\d\d\d))?/
 
@@ -108,8 +130,11 @@ module WX
     class RunwayVisualRange
       # Which runway
       attr_reader :runway
+      alias :rwy :runway
       # How far. If variable, this is a two-element Array giving the limits.
       attr_reader :range
+      alias :distance :range
+      alias :dist :range
       def initialize(raw)
         raise ArgumentError unless raw =~ /^R(\d+[LCR]?)\/([PM]?)(\d+)(V([P]?)(\d+))?FT$/
         @runway = $1
@@ -141,6 +166,9 @@ module WX
       # The phenomena. An array of two-character codes, e.g. 'FC' for funnel
       # cloud or 'RA' for rain.
       attr_reader :phenomena
+      def phenomenon
+        @phenomena.first
+      end
       def initialize(raw)
         r = /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PE|GR|GS|UP)*|(BR|FG|FU|VA|DU|SA|HZ|PY)*|(PO|SQ|FC|SS|DS)*)$/
         raise ArgumentError unless raw =~ r
@@ -174,8 +202,10 @@ module WX
       # Cloud cover. A two-character code. (See FMH-1
       # 12.6.9[http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link])
       attr_reader :cover
+      alias :clouds :cover
       # Distance Unit to the base of the cover type. 
       attr_reader :height
+      alias :base :height
       def initialize(raw)
         raise ArgumentError unless raw =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)(\d\d\d|\/\/\/)(CB|TCU)?$/
 
@@ -193,24 +223,29 @@ module WX
       def skc?
         @skc
       end
+      alias :clear? :skc?
       # Is the sky reported clear by automated equipment (meaning it's clear up
       # to 12,000 feet at least)?
       def clr?
         @clr
       end
+      alias :auto_clear? :clr?
       # Are there cumulonimbus clouds? Only when reported by humans.
       def cb?
         @cb
       end
+      alias :cumulonimbus? :cb?
       # Are there towering cumulus clouds? Only when reported by humans.
       def tcu?
         @tcu
       end
+      alias :towering_cumulus? :tcu?
       # Is this a vertical visibility restriction (meaning they can't tell
       # what's up there above this height)
       def vv?
         @cover == 'VV'
       end
+      alias :vertical_visibility? :vv?
     end
   end
 end

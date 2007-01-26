@@ -235,13 +235,13 @@ context 'Temperature' do
   end
 
   specify "01/M02" do
-    @m.temp.should == '1 degC'.u
-    @m.dewpoint.should == '-2 degC'.u
+    @m.temp.should == '1 tempC'.u
+    @m.dewpoint.should == '-2 tempC'.u
   end
   specify "M01/M02" do
     m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR M01/M02 A3031 RMK AO2'
-    m.temp.should == '-1 degC'.u
-    m.dewpoint.should == '-2 degC'.u
+    m.temp.should == '-1 tempC'.u
+    m.dewpoint.should == '-2 tempC'.u
   end
   specify 'no dewpoint' do
     m = METAR.parse 'METAR KLRU 241517Z 02/'
@@ -264,6 +264,24 @@ context 'Remarks' do
   end
 end
 
+context 'convenience methods' do
+  specify 'wind radians' do
+    w = Groups::Wind.new '18005KT'
+    w.radians.should == '180 deg'.u
+    w.radians.to_s.should =~ /rad/i
+  end
+  specify 'wind mph' do
+    w = Groups::Wind.new '18005KT'
+    w.mph.should == '5 knots'.u
+    w.mph.to_s.should =~ /mph/i
+  end
+  specify 'metar tempF' do
+    m = METAR.parse('KLRU 241517Z 01/M02')
+    # looks like ruby-units bugs
+    #m.tempF.should == '1 tempC'.unit
+    #m.tempF.to_s.should =~ /tempF/
+  end
+end
 
 # TODO non-US units
 # TODO parse rmk

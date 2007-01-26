@@ -21,31 +21,50 @@ module WX
     attr_accessor :wind
     # A Groups::Visibility object.
     attr_accessor :visibility
+    alias :vis :visibility
     # An array of  Groups::RunwayVisualRange objects.
     attr_accessor :rvr
+    alias :runway_visual_range :rvr
     # An array of Groups::PresentWeather objects.
     attr_accessor :weather
+    alias :present_weather :weather
+    alias :present_wx :weather
+    alias :wx :weather
     # An array of Groups::Sky objects.
     attr_accessor :sky
+    alias :clouds :sky
+    alias :cloud_cover :sky
     # A temperature Unit
     attr_accessor :temp
+    alias :temperature :temp
+    def tempF
+      @temp.to 'tempF'
+    end
     # A temperature Unit
     attr_accessor :dewpoint
+    alias :dew :dewpoint
     # A pressure Unit, giving atmospheric pressure (by which one calibrates an
     # altimiter)
     attr_accessor :altimiter
+    alias :pressure :altimiter
+    def pressure_mb
+      @altimiter.to 'millibar'
+    end
     # Remarks.
     attr_accessor :rmk
+    alias :remarks :rmk
 
     # Was this report entirely automated? (i.e. not checked by a human)
     def auto?
       @auto ? true : false
     end
+    alias :automated? :auto?
 
     # Was this report corrected by a human?
     def cor?
       @cor ? true : false
     end
+    alias :corrected? :cor?
 
     # Was this a SPECI report? SPECI (special) reports are issued when weather
     # changes significantly between regular reports, which are generally every
@@ -53,17 +72,20 @@ module WX
     def speci?
       @speci ? true : false
     end
+    alias :special? :speci?
 
     # CLR means clear below 12,000 feet (because automated equipment can't tell
     # above 12,000 feet)
     def clr?
       @sky == ['CLR']
     end
+    alias :auto_clear? :clr?
 
     # SKC means sky clear. Only humans can report SKC
     def skc?
       @sky == ['SKC']
     end
+    alias :clear? :skc?
 
     # Parse a raw METAR code and return a METAR object
     def self.parse(raw)
@@ -148,12 +170,12 @@ module WX
       if g =~ /^(M?)(\d\d)\/((M?)(\d\d))?$/
         t = $2.to_i
         t = -t if $1 == 'M'
-        m.temp = "#{t} degC".unit
+        m.temp = "#{t} tempC".unit
 
         if $3
           d = $5.to_i
           d = -d if $4 == 'M'
-          m.dewpoint = "#{d} degC".unit
+          m.dewpoint = "#{d} tempC".unit
         end
         
         g = groups.shift
