@@ -2,72 +2,6 @@ require 'wx/metar'
 require 'ruby-units'
 
 include WX
-context 'METAR' do
-  setup do
-    @m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
-  end
-
-  specify "present weather - w'w'" do
-    @m.weather.should_be_nil
-    m = METAR.parse 'METAR KLRU 241517Z -SHRA'
-    m.weather.intensity.should == '-'
-    m.weather.descriptor.should == 'SH'
-    m.weather.phenomena.should == ['RA']
-    m = METAR.parse 'METAR KLRU 241517Z BCFG'
-    m.weather.intensity.should_be_nil
-    m.weather.descriptor.should == 'BC'
-    m.weather.phenomena.should == ['FG']
-    m = METAR.parse 'METAR KLRU 241517Z +FC'
-    m.weather.intensity.should == '+'
-    m.weather.phenomena.should == ['FC']
-    m = METAR.parse 'METAR KLRU 241517Z TSSNGS'
-    m.weather.intensity.should_be_nil
-    m.weather.descriptor.should == 'TS'
-    m.weather.phenomena.should == ['SN','GS']
-    m = METAR.parse 'METAR KLRU 241517Z VCTS'
-    m.weather.proximity.should == 'VC'
-    m.weather.descriptor.should == 'TS'
-    m.weather.phenomena.should == []
-  end
-
-  specify 'sky condition - NsNsNshshshs or VVhshshs or SKC/CLR' do
-    @m.sky.should == 'CLR'
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM SKC 01/M02 A3031 RMK AO2'
-    m.sky.should == 'SKC'
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM FEW048 01/M02 A3031 RMK AO2'
-    m.sky.should == ['FEW','48 deg'.u]
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM SCT030 01/M02 A3031 RMK AO2'
-    m.sky.should == ['SCT','30 deg'.u]
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM BKN030 01/M02 A3031 RMK AO2'
-    m.sky.should == ['BKN','30 deg'.u]
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM OVC030 01/M02 A3031 RMK AO2'
-    m.sky.should == ['OVC','30 deg'.u]
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM VV005 01/M02 A3031 RMK AO2'
-    m.sky.should == ['VV','500 feet'.u]
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM BKN030CB'
-    m.sky.should == ['BKN','30 deg'.u, 'CB']
-  end
-
-  specify "temperature and dew point - T'T'/T'dT'd" do
-    @m.temp.should == '1 degC'.u
-    @m.dewpoint.should == '-2 degC'.u
-  end
-
-  specify 'altimiter - APHPHPHPH' do
-    @m.altimiter.should == '30.31 inHg'
-  end
-
-  specify 'remarks' do
-    @m.rmk.should == @m.rmk
-    @m.rmk.should == 'AO2'
-  end
-end
-
-# TODO rethink wind, rvr, present weather, sky condition
-# TODO refactor spec
-# TODO non-US units
-# TODO parse rmk
-
 
 # refactoring
 context 'Type' do
@@ -223,4 +157,106 @@ context 'Runway Visual Range' do
     m.rvr.first.should_be_variable
   end
 end
-# etc.
+context 'Present Weather' do
+  specify 'heavy rain showers' do
+    m = METAR.parse('KLRU 260352Z +SHRA')
+    m.weather.first.intensity.should == :heavy
+    m.weather.first.descriptor.should == 'SH'
+    m.weather.first.phenomena.should == ['RA']
+  end
+  specify 'moderate' do
+    m = METAR.parse('KLRU 260352Z SHRA')
+    m.weather.first.intensity.should == :moderate
+  end
+  specify 'thunderstorm in vicinity' do
+    m = METAR.parse('KLRU 260352Z VCTS')
+    m.weather.first.intensity.should == :vicinity
+    m.weather.first.descriptor.should == 'TS'
+  end
+  specify 'tornado' do
+    m = METAR.parse('KLRU 260352Z +FC')
+    m.weather.first.intensity.should == :heavy
+    m.weather.first.phenomena.should == ['FC']
+  end
+  specify 'three types of precipitation' do
+    m = METAR.parse('KLRU 260352Z -SHSNRAGS')
+    m.weather.first.intensity.should == :light
+    m.weather.first.descriptor.should == 'SH'
+    m.weather.first.phenomena.should == ['SN','RA','GS']
+  end
+  specify 'multiple pw groups' do
+    m = METAR.parse('KLRU 260352Z -SHRA VCFG')
+    m.weather.size.should == 2
+    m.weather.first.intensity.should == :light
+    m.weather.last.intensity.should == :vicinity
+  end
+end
+context 'Sky Condition' do
+  specify 'clear' do
+    m = METAR.parse('KLRU 260352Z SKC')
+    m.sky.should_be_skc
+    m = METAR.parse('KLRU 260352Z CLR')
+    m.sky.should_be_clr
+  end
+  specify 'scattered at 3000 feet' do
+    m = METAR.parse('KLRU 260352Z SCT030')
+    m.sky.cover.should == 'SCT'
+    m.sky.height.should == '3000 feet'.unit
+  end
+  specify 'vertical visibility 500 feet' do
+    m = METAR.parse('KLRU 260352Z VV005')
+    m.sky.should_be_vv
+    m.sky.height.should == '500 feet'.unit
+  end
+  specify 'cumulonimbus and towering cumulus' do
+    m = METAR.parse('KLRU 260352Z FEW050CB')
+    m.sky.cover.should == 'FEW'
+    m.sky.height.should == '5000 feet'.unit
+    m.sky.should_be_cb
+    m = METAR.parse('KLRU 260352Z FEW050TCU')
+    m.sky.should_be_tcu
+  end
+  specify 'BKN///' do
+    m = METAR.parse('KLRU 260352Z BKN///')
+    m.sky.cover.should == 'BKN'
+    m.sky.height.should_be_nil
+  end
+end
+context 'Temperature' do
+  setup do
+    @m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
+  end
+
+  specify "01/M02" do
+    @m.temp.should == '1 degC'.u
+    @m.dewpoint.should == '-2 degC'.u
+  end
+  specify "M01/M02" do
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR M01/M02 A3031 RMK AO2'
+    m.temp.should == '-1 degC'.u
+    m.dewpoint.should == '-2 degC'.u
+  end
+  specify 'no dewpoint' do
+    m = METAR.parse 'METAR KLRU 241517Z 02/'
+    m.dewpoint.should_be_nil
+  end
+end
+context 'Altimiter' do
+  setup do
+    @m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
+  end
+
+  specify 'A3031' do
+    @m.altimiter.should == '30.31 inHg'
+  end
+end
+context 'Remarks' do
+  specify 'AO2' do
+    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
+    m.rmk.should == 'AO2'
+  end
+end
+
+
+# TODO non-US units
+# TODO parse rmk

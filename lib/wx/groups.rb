@@ -108,5 +108,65 @@ module WX
         Range === @range
       end
     end
+    class PresentWeather
+      attr_reader :intensity, :descriptor, :phenomena
+      def initialize(g)
+        r = /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PE|GR|GS|UP)*|(BR|FG|FU|VA|DU|SA|HZ|PY)*|(PO|SQ|FC|SS|DS)*)$/
+        raise ArgumentError unless g =~ r
+
+        case $1
+        when '-'
+          @intensity = :light
+        when nil
+          @intensity = :moderate
+        when '+'
+          @intensity = :heavy
+        when 'VC'
+          @intensity = :vicinity
+        end
+
+        @descriptor = $2
+
+        @phenomena = []
+        s = $3
+        until s.empty?
+          @phenomena.push(s.slice!(0..1))
+        end
+      end
+      def proximity
+        @intensity
+      end
+    end
+    class Sky
+      attr_reader :cover, :height
+      def initialize(g)
+        raise ArgumentError unless g =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)(\d\d\d|\/\/\/)(CB|TCU)?$/
+
+        if $1
+          @clr = ($1 == 'CLR')
+          @skc = ($1 == 'SKC')
+        else
+          @cover = $2
+          @cb = ($4 == 'CB')
+          @tcu = ($4 == 'TCU')
+          @height = "#{$1}00 feet".unit if $3 =~ /(\d\d\d)/
+        end
+      end
+      def skc?
+        @skc
+      end
+      def clr?
+        @clr
+      end
+      def cb?
+        @cb
+      end
+      def tcu?
+        @tcu
+      end
+      def vv?
+        @cover == 'VV'
+      end
+    end
   end
 end

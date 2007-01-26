@@ -3,41 +3,10 @@ require 'wx/groups'
 require 'ruby-units'
 
 module WX
-  class VisualRange
-    attr_accessor :distance
-    def initialize(dist, plusminus=nil)
-      case plusminus 
-      when 'P'
-        @plus = true
-      when 'M'
-        @minus = true
-      end
-      @distance = dist
-    end
-
-    def plus?
-      @plus ? true : false
-    end
-    def minus?
-      @minus ? true : false
-    end
-  end
-
-  class PresentWeather
-    attr_accessor :intensity, :descriptor, :phenomena
-    def initialize(intensity_or_proximity, descriptor, phenomena)
-      @intensity = intensity_or_proximity
-      @descriptor = descriptor
-      @phenomena = phenomena
-    end
-    def proximity
-      @intensity
-    end
-  end
-
   class METAR
     include Groups
-    attr_accessor :station, :time, :wind, :visibility, :rvr, :weather, :sky, :temp, :dewpoint, :altimiter, :rmk
+    attr_accessor :station, :time, :wind, :visibility, :rvr, :weather, :sky
+    attr_accessor :temp, :dewpoint, :altimiter, :rmk
     attr_writer :auto, :cor, :speci
 
     def auto?
@@ -118,48 +87,36 @@ module WX
       end
 
       # RVR
+      m.rvr = []
       while g =~ /^R(\d+[LCR]?)\/([PM]?)(\d+)(V([PM]?)(\d+))?FT$/
-        m.rvr ||= []
         m.rvr.push RunwayVisualRange.new(g)
         g = groups.shift
       end
 
       # present weather
-      while g =~ /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((DZ|RA|SN|SG|IC|PE|GR|GS|UP)*|(BR|FG|FU|VA|DU|SA|HZ|PY)*|(PO|SQ|FC|SS|DS)*)$/
-        s = ($3 || '')
-        ph = []
-        until s.empty?
-          ph.push(s.slice!(0..1))
-        end
-        m.weather = PresentWeather.new($1,$2,ph)
+      m.weather = []
+      while g =~ /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ|DZ|RA|SN|SG|IC|PE|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/
+        m.weather.push PresentWeather.new(g)
         g = groups.shift
       end
       
       # sky condition
-      if g =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)(\d\d\d|\/\/\/)(TCU|CB)?$/
-        if $1
-          m.sky = $1
-        else
-          if $2 == 'VV'
-            m.sky = [$2,"#{$3}00 feet".unit]
-          else
-            m.sky = [$2,"#{$3} deg".unit]
-          end
-          m.sky.push $4 if $4
-        end
-
+      while g =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)/
+        m.sky = Sky.new(g)
         g = groups.shift
       end
 
       # temperature and dew point
-      if g =~ /^(M?)(\d\d)\/(M?)(\d\d)$/
+      if g =~ /^(M?)(\d\d)\/((M?)(\d\d))?$/
         t = $2.to_i
         t = -t if $1 == 'M'
         m.temp = "#{t} degC".unit
 
-        d = $4.to_i
-        d = -d if $3 == 'M'
-        m.dewpoint = "#{d} degC".unit
+        if $3
+          d = $5.to_i
+          d = -d if $4 == 'M'
+          m.dewpoint = "#{d} degC".unit
+        end
         
         g = groups.shift
       end
@@ -171,6 +128,11 @@ module WX
 
       if g == 'RMK'
         m.rmk = groups.join(' ')
+        groups = []
+      end
+
+      unless groups.empty?
+        raise ParseError, "Leftovers after parsing: #{groups.join(' ')}" 
       end
 
       return m
