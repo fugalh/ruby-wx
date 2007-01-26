@@ -1,3 +1,4 @@
+begin
 require 'spec/rake/spectask'
 
 Spec::Rake::SpecTask.new(:spec) do |t|
@@ -8,3 +9,10 @@ end
 
 task :test => :spec
 task :default => :spec
+rescue
+end
+
+desc "RDoc documentation"
+task :doc do
+  sh 'rdoc -t "Ruby WX" -m README README TODO lib'
+end

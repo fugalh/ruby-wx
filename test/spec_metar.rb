@@ -24,7 +24,7 @@ context 'Station' do
     m.station.should == 'KLRU'
   end
 end
-context '250455Z' do
+context 'Date and Time' do
   setup do
     @m = METAR.parse 'METAR KLRU 250455Z'
   end
@@ -40,11 +40,14 @@ context '250455Z' do
   specify 'utc' do
     @m.time.should_be_utc
   end
-  specify 'in the past' do
-    (Time.now - @m.time).should >= 0            # observation must be in the past
-  end
-  specify 'within the past month' do
-    (Time.now - @m.time).should < 31*24*60*60   # within the past month
+  (1..31).each do |d|
+    t = sprintf('%02d',d)+'0000Z'
+    month = 31*24*60*60
+    specify "#{t} within the past month" do
+      m = METAR.parse("KLRU #{t}")
+      (Time.now.utc - m.time).should >= 0
+      (Time.now.utc - m.time).should <= month
+    end
   end
 end
 context 'AUTO/COR' do
@@ -194,32 +197,36 @@ end
 context 'Sky Condition' do
   specify 'clear' do
     m = METAR.parse('KLRU 260352Z SKC')
-    m.sky.should_be_skc
+    m.sky.first.should_be_skc
     m = METAR.parse('KLRU 260352Z CLR')
-    m.sky.should_be_clr
+    m.sky.first.should_be_clr
   end
   specify 'scattered at 3000 feet' do
     m = METAR.parse('KLRU 260352Z SCT030')
-    m.sky.cover.should == 'SCT'
-    m.sky.height.should == '3000 feet'.unit
+    m.sky.first.cover.should == 'SCT'
+    m.sky.first.height.should == '3000 feet'.unit
   end
   specify 'vertical visibility 500 feet' do
     m = METAR.parse('KLRU 260352Z VV005')
-    m.sky.should_be_vv
-    m.sky.height.should == '500 feet'.unit
+    m.sky.first.should_be_vv
+    m.sky.first.height.should == '500 feet'.unit
   end
   specify 'cumulonimbus and towering cumulus' do
     m = METAR.parse('KLRU 260352Z FEW050CB')
-    m.sky.cover.should == 'FEW'
-    m.sky.height.should == '5000 feet'.unit
-    m.sky.should_be_cb
+    m.sky.first.cover.should == 'FEW'
+    m.sky.first.height.should == '5000 feet'.unit
+    m.sky.first.should_be_cb
     m = METAR.parse('KLRU 260352Z FEW050TCU')
-    m.sky.should_be_tcu
+    m.sky.first.should_be_tcu
   end
   specify 'BKN///' do
     m = METAR.parse('KLRU 260352Z BKN///')
-    m.sky.cover.should == 'BKN'
-    m.sky.height.should_be_nil
+    m.sky.first.cover.should == 'BKN'
+    m.sky.first.height.should_be_nil
+  end
+  specify 'multiple' do
+    m = METAR.parse('KLRU 260533Z AUTO 12013G19KT 10SM SCT026 SCT032 OVC039 07/02 A3020 RMK AO2')
+    m.sky.size.should == 3
   end
 end
 context 'Temperature' do

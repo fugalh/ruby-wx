@@ -21,18 +21,18 @@ module WX
       # mday, hour, min
       def self.parse(raw)
         raise ArgumentError unless raw =~ /^(\d\d)(\d\d)(\d\d)Z$/
-        t = ::Time.now
+        t = ::Time.now.utc
         y = t.year
         m = t.month
         mday = $1.to_i
         hour = $2.to_i
         min  = $3.to_i
         
-        if t.mday > mday
+        if t.mday < mday
           m -= 1
         end
         if m < 1
-          m = 1
+          m = 12
           y -= 1
         end
         return ::Time.utc(y,m,mday,hour,min)

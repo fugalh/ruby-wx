@@ -22,11 +22,11 @@ module WX
     end
 
     def clr?
-      @sky == 'CLR'
+      @sky == ['CLR']
     end
 
     def skc?
-      @sky == 'SKC'
+      @sky == ['SKC']
     end
 
     def self.parse(raw)
@@ -101,8 +101,9 @@ module WX
       end
       
       # sky condition
+      m.sky = []
       while g =~ /^(SKC|CLR)|(VV|FEW|SCT|BKN|OVC)/
-        m.sky = Sky.new(g)
+        m.sky.push Sky.new(g)
         g = groups.shift
       end
 

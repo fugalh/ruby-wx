@@ -5,34 +5,34 @@ intended for aviation, they are a useful way of getting a recent weather
 synopsis or forecast even for nonaviators.
 
 This release has been coded to the specification in 
-[Federal Meteorological Handbook No. 1 Chapter 12](http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link).
+Federal Meteorological Handbook No. 1 Chapter 12[http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link]
 
 == Synopsis
-require 'wx/metar'
-m = METAR.parse('KLRU 260533Z AUTO 12013G19KT 10SM SCT026 SCT032 OVC039 07/02 A3020 RMK AO2')
-m.station               #=> KLRU
-m.auto?                 #=> true
-m.wind.direction        #=> '120 deg'.unit
-m.wind.speed            #=> '13 knots'.unit
-m.wind.gust             #=> '19 knots'.unit
-m.visibility            #=> '10 miles'.unit
-m.sky.first.cover       #=> 'SCT' [1]
-m.sky.first.height      #=> '2600 feet'.unit
-m.sky[1].cover          #=> 'SCT'
-m.sky[1].height         #=> '3200 feet'.unit
-m.sky[2].cover          #=> 'OVC'
-m.sky[2].height         #=> '3900 feet'.unit
-m.temp                  #=> '7 degC'.unit
-m.dewpoint              #=> '2 degC'.unit
-m.altimiter             #=> '30.20 inHg'.unit (barometric pressure)
-m.rmk                   #=> 'AO2'
+    require 'wx/metar'
+    m = METAR.parse('KLRU 260533Z AUTO 12013G19KT 10SM SCT026 SCT032 OVC039 07/02 A3020 RMK AO2')
+    m.station               #=> KLRU
+    m.auto?                 #=> true
+    m.wind.direction        #=> '120 deg'.unit
+    m.wind.speed            #=> '13 knots'.unit
+    m.wind.gust             #=> '19 knots'.unit
+    m.visibility            #=> '10 miles'.unit
+    m.sky.first.cover       #=> 'SCT' [1]
+    m.sky.first.height      #=> '2600 feet'.unit
+    m.sky[1].cover          #=> 'SCT'
+    m.sky[1].height         #=> '3200 feet'.unit
+    m.sky[2].cover          #=> 'OVC'
+    m.sky[2].height         #=> '3900 feet'.unit
+    m.temp                  #=> '7 degC'.unit
+    m.dewpoint              #=> '2 degC'.unit
+    m.altimiter             #=> '30.20 inHg'.unit (barometric pressure)
+    m.rmk                   #=> 'AO2'
 
 1. See http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1ch12.htm#ch12link for
    the meaning of sky cover codes and present weather codes.
 
 == Requirements
 - ruby
-- ruby-units
+- ruby-units[http://rubyforge.org/projects/ruby-units]
 - rspec if you want to run the tests
 
 == Installation
@@ -46,7 +46,7 @@ confusion). See also TODO.
 See TODO
 
 == Bugs
-Email me at hans+ruby-wx@fugal.net
+Email me at mailto:hans+ruby-wx@fugal.net
 
 == License
 Copyright (C) 2007  Hans Fugal
