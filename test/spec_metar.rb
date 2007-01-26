@@ -1,44 +1,10 @@
-require 'wx/METAR'
+require 'wx/metar'
 require 'ruby-units'
 
 include WX
 context 'METAR' do
   setup do
     @m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM CLR 01/M02 A3031 RMK AO2'
-  end
-
-  specify 'visibility - VVVVVSM' do
-    @m.visibility.should == '10 miles'.u
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 5SM'
-    m.visibility.should == '5 miles'.u
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1/2SM'
-    m.visibility.should == '.5 miles'.u
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM'
-    m.visibility.should == '1.875 miles'.u
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 2 3/4SM'
-    m.visibility.should == '2.75 miles'.u
-  end
-
-  specify 'runway visual range - RDRDR/VRVRVRVRFT or RDRDR/VNVNVNVNVVXVXVXVXFT' do
-    @m.rvr.should_be_nil
-
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0900FT'
-    m.rvr.first.runway.should == '01L'
-    m.rvr.first.range.distance.should == '900 feet'.u
-
-    # TODO rethink variable
-    #m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0600V1000FT'
-
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 1 7/8SM R01L/0900FT R30/0300FT'
-    m.rvr.size.should == 2
-    m.rvr.last.runway.should == '30'
-    m.rvr.last.range.distance.should == '300 feet'.u
-
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM R01L/P6000FT'
-    m.rvr.first.range.should_be_plus
-
-    m = METAR.parse 'METAR KLRU 241517Z AUTO 00000KT 10SM R01L/M0600FT'
-    m.rvr.first.range.should_be_minus
   end
 
   specify "present weather - w'w'" do
@@ -190,10 +156,12 @@ context 'Wind' do
     m = METAR.parse 'METAR KLRU 241517Z VRB02KT'
     m.wind.direction.should == 'VRB'
     m.wind.speed.should == '2 knots'.u
+    m.wind.should_be_variable
   end
   specify 'strong and variable' do
     m = METAR.parse 'KLRU 241517Z 21010KT 100V240'
     m.wind.variable.should == ['100 deg'.u, '240 deg'.u]
+    m.wind.should_be_variable
   end
   specify 'other units' do
     m = METAR.parse 'KLRU 250533Z 27007KMH'
@@ -202,5 +170,57 @@ context 'Wind' do
     m.wind.speed.should == '2 m/s'.u
   end
 end
-
+context 'Visibility' do
+  specify '10 miles' do
+    METAR.parse('KLRU 251733Z AUTO 01005KT 10SM').visibility.should == '10 mi'.u
+  end
+  specify '5 miles' do
+    METAR.parse('KLRU 251733Z 01005KT 5SM').visibility.should == '5 mi'.u
+  end
+  specify '1/2SM' do
+    METAR.parse('KLRU 251733Z 01005KT 1/2SM').visibility.should == '.5 mi'.u
+  end
+  specify '1 7/8SM' do
+    METAR.parse('KLRU 251733Z 01005KT 1 7/8SM').visibility.should == '1.875 miles'.u
+  end
+  specify '2 3/4SM' do
+    METAR.parse('KLRU 251733Z 01005KT 2 3/4SM').visibility.should == '2.75 miles'.u
+  end
+  specify 'less than' do
+    m = METAR.parse('KLRU 251733Z 01005KT M1/4SM')
+    m.visibility.should == '.25 miles'.u
+    m.visibility.should_be_minus
+  end
+end
+context 'Runway Visual Range' do
+  specify 'R12L/0800FT' do
+    m = METAR.parse('KLRU 251733Z R12L/0800FT')
+    m.rvr.first.runway.should  == '12L'
+    m.rvr.first.range.should  == '800 feet'.u
+  end
+  specify 'R30/0600V1000FT' do
+    m = METAR.parse('KLRU 251733Z R30/0600V1000FT')
+    m.rvr.first.runway.should  == '30'
+    m.rvr.first.range.should  == ('600 feet'.u .. '1000 ft'.u)
+    m.rvr.first.should_be_variable
+  end
+  specify 'minus' do
+    m = METAR.parse('KLRU 251733Z R12L/M0600FT')
+    m.rvr.first.range.should == '600 feet'.u
+    m.rvr.first.range.should_be_minus
+    m = METAR.parse('KLRU 251733Z R12L/M0600V0800FT')
+    m.rvr.first.range.should == ('600 ft'.u .. '800 feet'.u)
+    m.rvr.first.range.first.should_be_minus
+    m.rvr.first.should_be_variable
+  end
+  specify 'plus' do
+    m = METAR.parse('KLRU 251733Z R12L/P6000FT')
+    m.rvr.first.range.should == '6000 feet'.u
+    m.rvr.first.range.should_be_plus
+    m = METAR.parse('KLRU 251733Z R12L/2000VP6000FT')
+    m.rvr.first.range.should == ('2000 ft'.u .. '6000 feet'.u)
+    m.rvr.first.range.last.should_be_plus
+    m.rvr.first.should_be_variable
+  end
+end
 # etc.
