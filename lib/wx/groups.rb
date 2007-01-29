@@ -71,8 +71,8 @@ module WX
       alias :gusts :gust
       alias :gusting_to :gust
       # If wind is strong and variable, this will be a two-element Array
-      # containing the angle Unit limits of the range, e.g. 
-      #     ['10 deg'.unit, '200 deg'.unit]
+      # containing the angle Unit limits of the range, e.g.  ['10 deg'.unit,
+      # '200 deg'.unit]
       attr_reader :variable 
       alias :variable_range :variable
       def initialize(raw)
@@ -101,7 +101,7 @@ module WX
       end
       # If wind is strong and variable or light and variable
       def variable?
-        (@variable or @direction == 'VRB') ? true : false
+        @variable or @direction == 'VRB'
       end
       def calm?
         @speed == '0 knots'.unit
@@ -132,6 +132,7 @@ module WX
       attr_reader :runway
       alias :rwy :runway
       # How far. If variable, this is a two-element Array giving the limits.
+      # Otherwise it's a Unit.
       attr_reader :range
       alias :distance :range
       alias :dist :range
