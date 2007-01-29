@@ -277,9 +277,8 @@ context 'convenience methods' do
   end
   specify 'metar tempF' do
     m = METAR.parse('KLRU 241517Z 01/M02')
-    # looks like ruby-units bugs
-    #m.tempF.should == '1 tempC'.unit
-    #m.tempF.to_s.should =~ /tempF/
+    m.tempF.should == '1 tempC'.unit
+    m.tempF.to_s.should =~ /tempF/
   end
 end
 
