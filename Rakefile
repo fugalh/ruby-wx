@@ -20,3 +20,10 @@ desc "RDoc documentation"
 task :doc do
   sh 'rdoc -t "Ruby WX" -m README README TODO lib'
 end
+
+task :dist => [:doc] do
+  sh 'darcs push falcon:public_html/src/ruby-wx'
+  sh 'rsync -r doc falcon:public_html/src/ruby-wx'
+  sh 'darcs dist -d wx-`cat VERSION`'
+  sh 'scp wx-`cat VERSION`.tar.gz falcon:public_html/src/ruby-wx/'
+end
