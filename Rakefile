@@ -18,7 +18,8 @@ end
 
 desc "RDoc documentation"
 task :doc do
-  sh 'rdoc -t "Ruby WX" -m README README TODO lib'
+  sh 'darcs changes > ChangeLog'
+  sh 'rdoc -t "Ruby WX" -m README README TODO ChangeLog lib'
 end
 
 task :dist => [:doc] do
