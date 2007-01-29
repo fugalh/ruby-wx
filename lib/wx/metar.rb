@@ -1,6 +1,7 @@
 require 'wx/exceptions'
 require 'wx/groups'
 require 'ruby-units'
+require 'stringio'
 
 module WX
   # METAR is short for a bunch of French words meaning "aviation routine
@@ -10,6 +11,8 @@ module WX
   # parse a METAR code and provide the information in its attribute readers.
   class METAR
     include Groups
+    # The raw METAR observation as passed to parse
+    attr_accessor :raw
     # The METAR station, as found in
     # stations.txt[http://weather.aero/metars/stations.txt]
     attr_accessor :station
@@ -90,6 +93,7 @@ module WX
     # Parse a raw METAR code and return a METAR object
     def self.parse(raw)
       m = METAR.new
+      m.raw = raw
       groups = raw.split
 
       # type
@@ -199,10 +203,43 @@ module WX
     end
 
     attr_accessor :speci, :auto, :cor
-    def initialize #:nodoc:
-      @speci = false
-      @station = 'KLRU'
-      @time = Time.now
+
+    # The output of this aims to be similar to 
+    # http://adds.aviationweather.gov/tafs/index.php?station_ids=klru&std_trans=translated
+    # But just plain text, not HTML tables or anything.
+    def to_s
+      s = StringIO.new
+      deg = "\xc2\xb0" # UTF-8 degree symbol
+      s.print <<EOF
+#{raw}
+Conditions at:        #{station}
+Temperature:          #{temp.to('tempC').abs}#{deg}C (#{tempF.abs}#{deg}F)
+Dewpoint:             #{dewpoint.to('tempC').abs}#{deg}C (#{dewpoint.to('tempF').abs}#{deg}F) [RH #{rh}%]
+Pressure (altimiter): #{altimiter.to('inHg')} (#{altimiter.to('millibar')})
+Winds:                #{wind.speed} from #{wind.dir}
+Visibility:           #{visibility}
+EOF
+=begin TODO
+Ceiling: 
+Clouds:
+Weather:
+=end
+      s.string
     end
+
+    # Relative Humidity
+    # See http://www.faqs.org/faqs/meteorology/temp-dewpoint/
+    def relative_humidity
+      es0 = 6.11 # hPa
+      t0 = 273.15 # kelvin
+      td = self.dewpoint.to('tempK').abs
+      t = self.temp.to('tempK').abs
+      lv = 2500000 # joules/kg
+      rv = 461.5 # joules*kelvin/kg
+      e  = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/td))
+      es = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/t))
+      rh = 100 * e/es
+    end
+    alias :rh :relative_humidity
   end
 end
