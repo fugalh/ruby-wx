@@ -210,14 +210,22 @@ module WX
     def to_s
       s = StringIO.new
       deg = "\xc2\xb0" # UTF-8 degree symbol
+
+      # print a float to d decimal places leaving off trailing 0s
+      def pf(f,d=2)
+        s = sprintf("%.#{d}f",f)
+        s.gsub!(/(\.0+|(\.\d*[1-9])0+)$/, '\2')
+        s
+      end
+
       s.print <<EOF
 #{raw}
 Conditions at:        #{station}
-Temperature:          #{temp.to('tempC').abs}#{deg}C (#{tempF.abs}#{deg}F)
-Dewpoint:             #{dewpoint.to('tempC').abs}#{deg}C (#{dewpoint.to('tempF').abs}#{deg}F) [RH #{rh}%]
-Pressure (altimiter): #{altimiter.to('inHg')} (#{altimiter.to('millibar')})
+Temperature/Dewpoint: #{pf temp.to('tempC').abs}#{deg}C / #{pf dewpoint.to('tempC').abs}#{deg}C (#{pf tempF.abs}#{deg}F / #{pf dewpoint.to('tempF').abs}#{deg}F) [RH #{pf rh,1}%]
+Pressure (altimiter): #{pf altimiter.to('inHg').abs} inches Hg (#{pf altimiter.to('millibar').abs, 1} mb)
 Winds:                #{wind.speed} from #{wind.dir}
 Visibility:           #{visibility}
+Remarks:              #{rmk}
 EOF
 =begin TODO
 Ceiling: 
