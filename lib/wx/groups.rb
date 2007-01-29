@@ -146,12 +146,12 @@ module WX
           r1 = @range
           r2 = "#{$6} feet".unit
           r2.plus = true if $5 == 'P'
-          @range = (r1..r2)
+          @range = [r1,r2]
         end
       end
       # Is the visibility range variable?
       def variable?
-        Range === @range
+        Array === @range
       end
     end
     # Weather phenomena in the area. At the moment this is a very thin layer

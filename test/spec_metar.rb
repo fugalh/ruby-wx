@@ -138,7 +138,7 @@ context 'Runway Visual Range' do
   specify 'R30/0600V1000FT' do
     m = METAR.parse('KLRU 251733Z R30/0600V1000FT')
     m.rvr.first.runway.should  == '30'
-    m.rvr.first.range.should  == ('600 feet'.u .. '1000 ft'.u)
+    m.rvr.first.range.should  == ['600 feet'.u,'1000 ft'.u]
     m.rvr.first.should_be_variable
   end
   specify 'minus' do
@@ -146,7 +146,7 @@ context 'Runway Visual Range' do
     m.rvr.first.range.should == '600 feet'.u
     m.rvr.first.range.should_be_minus
     m = METAR.parse('KLRU 251733Z R12L/M0600V0800FT')
-    m.rvr.first.range.should == ('600 ft'.u .. '800 feet'.u)
+    m.rvr.first.range.should == ['600 ft'.u , '800 feet'.u]
     m.rvr.first.range.first.should_be_minus
     m.rvr.first.should_be_variable
   end
@@ -155,7 +155,7 @@ context 'Runway Visual Range' do
     m.rvr.first.range.should == '6000 feet'.u
     m.rvr.first.range.should_be_plus
     m = METAR.parse('KLRU 251733Z R12L/2000VP6000FT')
-    m.rvr.first.range.should == ('2000 ft'.u .. '6000 feet'.u)
+    m.rvr.first.range.should == ['2000 ft'.u , '6000 feet'.u]
     m.rvr.first.range.last.should_be_plus
     m.rvr.first.should_be_variable
   end
