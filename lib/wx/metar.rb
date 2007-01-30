@@ -209,7 +209,7 @@ module WX
     # But just plain text, not HTML tables or anything.
     def to_s
       s = StringIO.new
-      deg = "\xc2\xb0" # UTF-8 degree symbol
+      deg = Degree
 
       # print a float to d decimal places leaving off trailing 0s
       def pf(f,d=2)
@@ -218,20 +218,35 @@ module WX
         s
       end
 
-      s.print <<EOF
-#{raw}
-Conditions at:        #{station}
-Temperature/Dewpoint: #{pf temp.to('tempC').abs}#{deg}C / #{pf dewpoint.to('tempC').abs}#{deg}C (#{pf tempF.abs}#{deg}F / #{pf dewpoint.to('tempF').abs}#{deg}F) [RH #{pf rh,1}%]
-Pressure (altimiter): #{pf altimiter.to('inHg').abs} inches Hg (#{pf altimiter.to('millibar').abs, 1} mb)
-Winds:                #{wind.speed} from #{wind.dir}
-Visibility:           #{visibility}
-Remarks:              #{rmk}
-EOF
-=begin TODO
-Ceiling: 
-Clouds:
-Weather:
-=end
+      s.puts raw if raw
+      s.puts "Conditions at:        #{station}"
+      if temp
+        s.puts "Temperature/Dewpoint: #{pf temp.to('tempC').abs}#{deg}C / #{pf dewpoint.to('tempC').abs}#{deg}C (#{pf tempF.abs}#{deg}F / #{pf dewpoint.to('tempF').abs}#{deg}F) [RH #{pf rh,1}%]"
+      end
+      if altimiter
+        s.puts "Pressure (altimiter): #{pf altimiter.to('inHg').abs} inches Hg (#{pf altimiter.to('millibar').abs, 1} mb)"
+      end
+      if wind
+        s.puts "Winds:                #{wind}"
+      end
+      if visibility
+        s.puts "Visibility:           #{visibility}"
+      end
+      if sky
+        s.puts "Clouds:               #{sky.first}"
+        sky[1..-1].each do |c|
+          s.puts " "*22 + c.to_s
+        end
+      end
+      if rvr and not rvr.empty?
+        s.puts "Runway Visual Range:  #{rvr.first}"
+        rvr[1..-1].each do |r|
+          s.puts " "*22 + r.to_s
+        end
+      end
+      if rmk
+        s.puts "Remarks:              #{rmk}"
+      end
       s.string
     end
 
@@ -250,4 +265,8 @@ Weather:
     end
     alias :rh :relative_humidity
   end
+
+  protected 
+  Degree = "\xc2\xb0" # UTF-8 degree symbol
+
 end
