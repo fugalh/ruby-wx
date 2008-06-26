@@ -1,3 +1,4 @@
+require 'rubygems' rescue nil # Insert swear word here.
 require 'wx/exceptions'
 require 'wx/groups'
 require 'ruby-units'

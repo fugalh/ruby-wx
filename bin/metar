@@ -1,0 +1,15 @@
+#! /opt/local/bin/ruby
+require 'wx/metar'
+require 'open-uri'
+
+def usage
+  $stderr.puts "usage: #{$0} <station>"
+  exit 1
+end
+usage if ARGV.empty? or ARGV[0] =~ /^-h/i
+
+u = "ftp://tgftp.nws.noaa.gov/data/observations/metar/stations/#{ARGV[0].upcase}.TXT"
+raw = `wget -q -O - #{u}`
+usage if raw == nil or raw == ''
+raw = raw.split("\n")[1] # don't know why open-uri doesn't work
+puts WX::METAR.parse(raw).to_s
