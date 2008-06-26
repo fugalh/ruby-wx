@@ -213,6 +213,7 @@ module WX
 
       # print a float to d decimal places leaving off trailing 0s
       def pf(f,d=2)
+        f = f.scalar if Unit === f
         s = sprintf("%.#{d}f",f)
         s.gsub!(/(\.0+|(\.\d*[1-9])0+)$/, '\2')
         s
