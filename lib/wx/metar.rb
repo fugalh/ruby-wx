@@ -80,13 +80,13 @@ module WX
     # CLR means clear below 12,000 feet (because automated equipment can't tell
     # above 12,000 feet)
     def clr?
-      @sky == ['CLR']
+      @sky.first.clr?
     end
     alias :auto_clear? :clr?
 
     # SKC means sky clear. Only humans can report SKC
     def skc?
-      @sky == ['SKC']
+      @sky.first.skc?
     end
     alias :clear? :skc?
 
@@ -158,7 +158,7 @@ module WX
 
       # present weather
       m.weather = []
-      while g =~ /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ|DZ|RA|SN|SG|IC|PE|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/
+      while g =~ /^([-+]|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ|DZ|RA|SN|SG|IC|PE|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/
         m.weather.push PresentWeather.new(g)
         g = groups.shift
       end
@@ -253,15 +253,20 @@ module WX
     # Relative Humidity
     # See http://www.faqs.org/faqs/meteorology/temp-dewpoint/
     def relative_humidity
-      es0 = 6.11 # hPa
-      t0 = 273.15 # kelvin
-      td = self.dewpoint.to('tempK').abs
-      t = self.temp.to('tempK').abs
-      lv = 2500000 # joules/kg
-      rv = 461.5 # joules*kelvin/kg
-      e  = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/td))
-      es = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/t))
-      rh = 100 * e/es
+      if (!dewpoint.nil? && !temp.nil?)
+        es0 = 6.11 # hPa
+        t0 = 273.15 # kelvin
+        td = self.dewpoint.to('tempK').abs
+        t = self.temp.to('tempK').abs
+        lv = 2500000 # joules/kg
+        rv = 461.5 # joules*kelvin/kg
+        e  = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/td))
+        es = es0 * Math::exp(lv/rv * (1.0/t0 - 1.0/t))
+        rh = 100 * e/es
+        (rh.to_s+'%').unit
+      else
+        nil
+      end
     end
     alias :rh :relative_humidity
   end
