@@ -7,15 +7,15 @@ include WX
 context 'Type' do
   specify 'METAR' do
     m = METAR.parse 'METAR KLRU 250455Z'
-    m.should_not_be_speci
+    m.should_not be_speci
   end
   specify 'SPECI' do
     m = METAR.parse 'SPECI KLRU 250455Z'
-    m.should_be_speci
+    m.should be_speci
   end
   specify 'omitted' do
     m = METAR.parse 'KLRU 250455Z'
-    m.should_not_be_speci
+    m.should_not be_speci
   end
 end
 context 'Station' do
@@ -38,7 +38,7 @@ context 'Date and Time' do
     @m.time.min.should == 55
   end
   specify 'utc' do
-    @m.time.should_be_utc
+    @m.time.should be_utc
   end
   (1..31).each do |d|
     t = sprintf('%02d',d)+'0000Z'
@@ -53,24 +53,24 @@ end
 context 'AUTO/COR' do
   specify 'AUTO' do
     m = METAR.parse('KLRU 250513Z AUTO 24005KT 10SM CLR 02/M01 A3038 RMK AO2')
-    m.should_be_auto
-    m.should_not_be_cor
+    m.should be_auto
+    m.should_not be_cor
   end
   specify 'COR' do
     m = METAR.parse('KLRU 250513Z COR 24005KT 10SM CLR 02/M01 A3038 RMK AO2')
-    m.should_not_be_auto
-    m.should_be_cor
+    m.should_not be_auto
+    m.should be_cor
   end
   specify 'omitted' do
     m = METAR.parse('KLRU 250513Z')
-    m.should_not_be_auto
-    m.should_not_be_cor
+    m.should_not be_auto
+    m.should_not be_cor
   end
 end
 context 'Wind' do
   specify 'calm' do
     m = METAR.parse('KLRU 250513Z 00000KT')
-    m.wind.should_be_calm
+    m.wind.should be_calm
   end
   specify 'ordinary' do
     m = METAR.parse('KLRU 250513Z 24005KT')
@@ -93,12 +93,12 @@ context 'Wind' do
     m = METAR.parse 'METAR KLRU 241517Z VRB02KT'
     m.wind.direction.should == 'VRB'
     m.wind.speed.should == '2 knots'.u
-    m.wind.should_be_variable
+    m.wind.should be_variable
   end
   specify 'strong and variable' do
     m = METAR.parse 'KLRU 241517Z 21010KT 100V240'
     m.wind.variable.should == ['100 deg'.u, '240 deg'.u]
-    m.wind.should_be_variable
+    m.wind.should be_variable
   end
   specify 'other units' do
     m = METAR.parse 'KLRU 250533Z 27007KMH'
@@ -126,7 +126,7 @@ context 'Visibility' do
   specify 'less than' do
     m = METAR.parse('KLRU 251733Z 01005KT M1/4SM')
     m.visibility.should == '.25 miles'.u
-    m.visibility.should_be_minus
+    m.visibility.should be_minus
   end
 end
 context 'Runway Visual Range' do
@@ -139,25 +139,25 @@ context 'Runway Visual Range' do
     m = METAR.parse('KLRU 251733Z R30/0600V1000FT')
     m.rvr.first.runway.should  == '30'
     m.rvr.first.range.should  == ['600 feet'.u,'1000 ft'.u]
-    m.rvr.first.should_be_variable
+    m.rvr.first.should be_variable
   end
   specify 'minus' do
     m = METAR.parse('KLRU 251733Z R12L/M0600FT')
     m.rvr.first.range.should == '600 feet'.u
-    m.rvr.first.range.should_be_minus
+    m.rvr.first.range.should be_minus
     m = METAR.parse('KLRU 251733Z R12L/M0600V0800FT')
     m.rvr.first.range.should == ['600 ft'.u , '800 feet'.u]
-    m.rvr.first.range.first.should_be_minus
-    m.rvr.first.should_be_variable
+    m.rvr.first.range.first.should be_minus
+    m.rvr.first.should be_variable
   end
   specify 'plus' do
     m = METAR.parse('KLRU 251733Z R12L/P6000FT')
     m.rvr.first.range.should == '6000 feet'.u
-    m.rvr.first.range.should_be_plus
+    m.rvr.first.range.should be_plus
     m = METAR.parse('KLRU 251733Z R12L/2000VP6000FT')
     m.rvr.first.range.should == ['2000 ft'.u , '6000 feet'.u]
-    m.rvr.first.range.last.should_be_plus
-    m.rvr.first.should_be_variable
+    m.rvr.first.range.last.should be_plus
+    m.rvr.first.should be_variable
   end
 end
 context 'Present Weather' do
@@ -197,9 +197,9 @@ end
 context 'Sky Condition' do
   specify 'clear' do
     m = METAR.parse('KLRU 260352Z SKC')
-    m.sky.first.should_be_skc
+    m.sky.first.should be_skc
     m = METAR.parse('KLRU 260352Z CLR')
-    m.sky.first.should_be_clr
+    m.sky.first.should be_clr
   end
   specify 'scattered at 3000 feet' do
     m = METAR.parse('KLRU 260352Z SCT030')
@@ -208,21 +208,21 @@ context 'Sky Condition' do
   end
   specify 'vertical visibility 500 feet' do
     m = METAR.parse('KLRU 260352Z VV005')
-    m.sky.first.should_be_vv
+    m.sky.first.should be_vv
     m.sky.first.height.should == '500 feet'.unit
   end
   specify 'cumulonimbus and towering cumulus' do
     m = METAR.parse('KLRU 260352Z FEW050CB')
     m.sky.first.cover.should == 'FEW'
     m.sky.first.height.should == '5000 feet'.unit
-    m.sky.first.should_be_cb
+    m.sky.first.should be_cb
     m = METAR.parse('KLRU 260352Z FEW050TCU')
-    m.sky.first.should_be_tcu
+    m.sky.first.should be_tcu
   end
   specify 'BKN///' do
     m = METAR.parse('KLRU 260352Z BKN///')
     m.sky.first.cover.should == 'BKN'
-    m.sky.first.height.should_be_nil
+    m.sky.first.height.should be_nil
   end
   specify 'multiple' do
     m = METAR.parse('KLRU 260533Z AUTO 12013G19KT 10SM SCT026 SCT032 OVC039 07/02 A3020 RMK AO2')
@@ -245,7 +245,7 @@ context 'Temperature' do
   end
   specify 'no dewpoint' do
     m = METAR.parse 'METAR KLRU 241517Z 02/'
-    m.dewpoint.should_be_nil
+    m.dewpoint.should be_nil
   end
 end
 context 'Altimiter' do

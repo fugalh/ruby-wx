@@ -8,11 +8,11 @@ context 'Unit' do
     @p.plus = true
   end
   specify 'plus is greater_than' do
-    @p.should_be_greater_than
+    @p.should be_greater_than
     @p.greater_than.should == true
   end
   specify 'minus is less_than' do
-    @m.should_be_less_than
+    @m.should be_less_than
     @m.less_than.should == true
   end
 end
