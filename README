@@ -36,7 +36,9 @@ Federal Meteorological Handbook No. 1 Chapter 12[http://www.nws.noaa.gov/oso/oso
 - rspec if you want to run the tests
 
 == Installation
-sudo ruby setup.rb
+Download from GitHub[http://github.com/fugalh/ruby-wx]
+
+    sudo ruby setup.rb
 
 == Documentation
 Read the code or generate the rdocs (and then read the code to clear up
